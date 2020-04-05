@@ -1,5 +1,5 @@
 # VikiDownload
- Descarga de viki
+ Descarga de viki, El zip contiene un exec standalone para mac.
 # Funcionamiento
 
 Se mete a viki, consigue el link del primer epi, comienza a iterar sobre este hasta llegar al final de la temporada. en cada iteracion va a tubeofline y consigue los links de descarga
