@@ -8,7 +8,7 @@ Created on Thu Apr  2 00:30:05 2020
 
 import requests
 import re
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import os
 import sys
 
@@ -33,43 +33,44 @@ def descargar(r,nombre,episodio):
                 f.write(chunk)                
     print("\nDescarga terminada\n")
     
-mainpage=input("ingrese link general, (eg. https://www.viki.com/tv/34479c-fight-my-way?locale=es):  ")    
-newr=requests.get(mainpage)
-soup=BeautifulSoup(newr.text,features="html.parser")
-epis=soup.findAll('small',{'class','item-count'})
-link=soup.findAll('div',{'class','row-inline episode-widget'})
-link=link[0].a['href']
-important="-".join(link.split("-")[1:-1])
-print(link)
-numero=int(link.split('/')[-1].split("-")[0][:-1])
+mainpage=input("\nIngrese link, ( eg. https://www.viki.com/videos/1118519v-fight-my-way-episode-1 ):  ")   
 
-titulo_serie=soup.h1.text.strip()
-
-for x in range(0,int(epis[0].text)):
-    link=important +"-"+str(x+1)
+serie=mainpage.split('/')[-1]
+partes=serie.split("-")
+numero=int(partes[0][:-1])
+epi=int(partes[-1])
+important="-".join(mainpage.split("-")[1:-1])
+titulo_serie=" ".join(mainpage.split("-")[1:-2])
+loop = 0
+s = requests.Session()
+while True:
     
-    auxiliar=numero+x
-  
-    linkarreglado='https://www.viki.com/videos/'+str(auxiliar)+'v-'+link
-    print(linkarreglado)
+    linkarreglado='https://www.viki.com/videos/'+str(numero + loop)+'v-'+important+"-"+str(loop+epi)
+
     lastbit=linkarreglado.split("/")[-1]
     number=lastbit.split('-')[0]
-    
-    r = requests.get('https://www.tubeoffline.com/downloadFrom.php?host=Viki&video=https%3A%2F%2Fwww.viki.com%2Fvideos%2F'+lastbit)
+    newr=s.get(linkarreglado)
+    print(8*"#"+"  DESCARGANDO {} {} ".format(titulo_serie,loop+epi)+"#"*8)
+    if newr.status_code != 200:
+        break
+    r = s.get('https://www.tubeoffline.com/downloadFrom.php?host=Viki&video=https%3A%2F%2Fwww.viki.com%2Fvideos%2F'+lastbit)
     print("\nlink a convertir: "+'https://www.tubeoffline.com/downloadFrom.php?host=Viki&video=https%3A%2F%2Fwww.viki.com%2Fvideos%2F'+lastbit)
     allVids=re.findall(r'_high_(.*?)\"',r.text)
-    print("\nfound:",len(allVids)," in total")
+    print("\nEncontrados:",len(allVids),"videos en total, eligiendo la mejor calidad")
     Linkvideo= "https://v4.viki.io/"+number+"/"+number+"_high_"+allVids[-1]
-    print("\nLink Video: ", Linkvideo)
+    print("\nCargando Video: ", Linkvideo)
+    video=s.get(Linkvideo)
     print("\nDescargando Video...\n")
-    descargar(requests.get(Linkvideo),titulo_serie,titulo_serie+" s01e"+str(x+1)+".mp4")
+    descargar(video,titulo_serie,titulo_serie+" s01e"+str(loop+epi)+".mp4")
         
     subs = re.search(r'es.srt\?(.*?)\"',r.text)
     text="https://api.viki.io/v4/videos/" + number+"/subtitles/es.srt?"+subs.group(1)
-    print("\nsubtitulos: ",text)
+    print("\nsubtitulos esp: ",text)
     print("\nDescargando subtitulos...\n")
-    descargar(requests.get(text),titulo_serie,titulo_serie+" s01e"+str(x+1)+".spa.srt")
-  
+    descargar(s.get(text),titulo_serie,titulo_serie+" s01e"+str(loop+epi)+".spa.srt")
+    loop += 1    
+    
+
     
     
     
